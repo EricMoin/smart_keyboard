@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - smart_keyboard (0.1.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - smart_keyboard (from `.symlinks/plugins/smart_keyboard/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  smart_keyboard:
+    :path: ".symlinks/plugins/smart_keyboard/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  smart_keyboard: 5709ff5ed1a791d69564ae55fe4ef82a6a42a5a8
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.16.2
