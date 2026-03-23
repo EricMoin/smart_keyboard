@@ -7,7 +7,6 @@ import android.os.Build
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
-import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
@@ -38,9 +37,9 @@ class SmartKeyboardPlugin :
     private var contentView: View? = null
 
     private var currentKeyboardHeightPx: Int = 0
+    private var targetKeyboardHeightPx: Int = 0
 
     private var insetsAnimationCallback: WindowInsetsAnimationCompat.Callback? = null
-    private var applyInsetsListener: OnApplyWindowInsetsListener? = null
     private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -144,26 +143,34 @@ class SmartKeyboardPlugin :
             }
 
             ViewCompat.setWindowInsetsAnimationCallback(view, null)
-            ViewCompat.setOnApplyWindowInsetsListener(view, null)
         }
 
         globalLayoutListener = null
         insetsAnimationCallback = null
-        applyInsetsListener = null
         contentView = null
         currentKeyboardHeightPx = 0
+        targetKeyboardHeightPx = 0
     }
 
     private fun attachModernInsetsListeners(view: View) {
-        applyInsetsListener = OnApplyWindowInsetsListener { _, insets ->
-            val keyboardHeightPx = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            emitKeyboardEvent(keyboardHeightPx, isAnimating = false)
-            insets
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(view, applyInsetsListener)
-
         insetsAnimationCallback = object :
             WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+
+            override fun onStart(
+                animation: WindowInsetsAnimationCompat,
+                bounds: WindowInsetsAnimationCompat.BoundsCompat,
+            ): WindowInsetsAnimationCompat.BoundsCompat {
+                if ((animation.typeMask and WindowInsetsCompat.Type.ime()) != 0) {
+                    val imeVisible = ViewCompat.getRootWindowInsets(view)
+                        ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
+                    targetKeyboardHeightPx = if (imeVisible) {
+                        bounds.upperBound.bottom
+                    } else {
+                        0
+                    }
+                }
+                return bounds
+            }
 
             override fun onProgress(
                 insets: WindowInsetsCompat,
@@ -186,7 +193,6 @@ class SmartKeyboardPlugin :
                         ?.bottom
                         ?: 0
                     emitKeyboardEvent(keyboardHeightPx, isAnimating = false)
-                    view.requestApplyInsets()
                 }
             }
         }
@@ -197,6 +203,7 @@ class SmartKeyboardPlugin :
         globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
             val keyboardHeightPx = calculateLegacyKeyboardHeightPx(view)
             if (keyboardHeightPx != currentKeyboardHeightPx) {
+                targetKeyboardHeightPx = keyboardHeightPx
                 emitKeyboardEvent(keyboardHeightPx, isAnimating = false)
             }
         }
@@ -269,6 +276,7 @@ class SmartKeyboardPlugin :
         currentKeyboardHeightPx = heightPx.coerceAtLeast(0)
         val mapData = mapOf(
             "height" to toLogicalPixels(currentKeyboardHeightPx),
+            "targetHeight" to toLogicalPixels(targetKeyboardHeightPx.coerceAtLeast(0)),
             "isAnimating" to isAnimating,
             "isVisible" to (currentKeyboardHeightPx > 0),
         )
