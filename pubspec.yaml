@@ -2,8 +2,8 @@ name: smart_keyboard
 description: >-
   A Flutter plugin for real-time keyboard height tracking with configurable
   throttling, and programmatic keyboard show/hide on iOS and Android.
-version: 0.1.0
-homepage: https://github.com/smart-keyboard/smart_keyboard
+version: 0.1.1
+homepage: https://github.com/EricMoin/smart_keyboard
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
