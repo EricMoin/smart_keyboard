@@ -86,6 +86,20 @@ class SmartKeyboard {
   /// moment of the call, which may be an intermediate value.
   static Future<double> get keyboardHeight => _platform.getKeyboardHeight();
 
+  /// Returns a stream that emits the target keyboard height whenever it
+  /// changes.
+  ///
+  /// When the keyboard starts showing, this emits the final height
+  /// immediately (before the animation completes).
+  /// When the keyboard starts hiding, this emits `0.0` immediately.
+  ///
+  /// Only emits when the target height actually changes (deduplicated).
+  static Stream<double> get onTargetHeightChanged {
+    return _platform.keyboardEventStream
+        .map((event) => event.targetHeight)
+        .distinct();
+  }
+
   /// Returns a stream that emits `true` when the keyboard becomes visible
   /// and `false` when it becomes hidden.
   ///
