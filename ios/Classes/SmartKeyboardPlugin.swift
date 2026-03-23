@@ -192,9 +192,10 @@ public class SmartKeyboardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler 
 
   private func emitKeyboardEvent(height: CGFloat, isAnimating: Bool) {
     let emitBlock = { [weak self] in
-      guard let sink = self?.eventSink else { return }
+      guard let self = self, let sink = self.eventSink else { return }
       let payload: [String: Any] = [
         "height": Double(height),
+        "targetHeight": Double(self.targetKeyboardHeight),
         "isAnimating": isAnimating,
         "isVisible": height > 0
       ]
