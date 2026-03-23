@@ -29,11 +29,13 @@ class KeyboardDemoPage extends StatefulWidget {
 
 class _KeyboardDemoPageState extends State<KeyboardDemoPage> {
   double _keyboardHeight = 0.0;
+  double _targetHeight = 0.0;
   bool _isVisible = false;
   bool _isAnimating = false;
   int _eventCount = 0;
 
   StreamSubscription<KeyboardHeightEvent>? _heightSubscription;
+  StreamSubscription<double>? _targetHeightSubscription;
   StreamSubscription<bool>? _visibilitySubscription;
 
   final TextEditingController _textController = TextEditingController();
@@ -55,6 +57,14 @@ class _KeyboardDemoPageState extends State<KeyboardDemoPage> {
             _eventCount++;
           });
         });
+
+    _targetHeightSubscription = SmartKeyboard.onTargetHeightChanged.listen((
+      targetHeight,
+    ) {
+      setState(() {
+        _targetHeight = targetHeight;
+      });
+    });
 
     _visibilitySubscription = SmartKeyboard.onVisibilityChanged.listen((
       visible,
@@ -78,6 +88,7 @@ class _KeyboardDemoPageState extends State<KeyboardDemoPage> {
   @override
   void dispose() {
     _heightSubscription?.cancel();
+    _targetHeightSubscription?.cancel();
     _visibilitySubscription?.cancel();
     _textController.dispose();
     super.dispose();
@@ -89,102 +100,144 @@ class _KeyboardDemoPageState extends State<KeyboardDemoPage> {
       appBar: AppBar(title: const Text('SmartKeyboard Demo')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Keyboard Status',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildInfoRow(
+                        'Visible',
+                        _isVisible ? 'YES' : 'NO',
+                        _isVisible ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        'Height',
+                        '${_keyboardHeight.toStringAsFixed(1)} px',
+                        null,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        'Target Height',
+                        '${_targetHeight.toStringAsFixed(1)} px',
+                        _isAnimating && _targetHeight > 0
+                            ? Colors.deepPurple
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        'Animating',
+                        _isAnimating ? 'YES' : 'NO',
+                        _isAnimating ? Colors.orange : Colors.grey,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Events', '$_eventCount', null),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_keyboardHeight > 0 || _targetHeight > 0)
+                Stack(
                   children: [
-                    Text(
-                      'Keyboard Status',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    // Target height indicator (shown during animation)
+                    if (_isAnimating && _targetHeight > 0)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 16),
+                        height: (_targetHeight / 4).clamp(0.0, 100.0),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.deepPurple.withValues(alpha: 0.5),
+                            strokeAlign: BorderSide.strokeAlignInside,
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text(
+                              'target: ${_targetHeight.toStringAsFixed(0)} px',
+                              style: TextStyle(
+                                color: Colors.deepPurple.withValues(alpha: 0.7),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Current height bar
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 16),
+                      height: (_keyboardHeight / 4).clamp(0.0, 100.0),
+                      decoration: BoxDecoration(
+                        color: (_isAnimating ? Colors.orange : Colors.blue)
+                            .withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _isAnimating ? Colors.orange : Colors.blue,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${_keyboardHeight.toStringAsFixed(0)} px',
+                          style: TextStyle(
+                            color: _isAnimating ? Colors.orange : Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Visible',
-                      _isVisible ? 'YES' : 'NO',
-                      _isVisible ? Colors.green : Colors.red,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                      'Height',
-                      '${_keyboardHeight.toStringAsFixed(1)} px',
-                      null,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                      'Animating',
-                      _isAnimating ? 'YES' : 'NO',
-                      _isAnimating ? Colors.orange : Colors.grey,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow('Events', '$_eventCount', null),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_keyboardHeight > 0)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 16),
-                height: (_keyboardHeight / 4).clamp(0.0, 100.0),
-                decoration: BoxDecoration(
-                  color: (_isAnimating ? Colors.orange : Colors.blue)
-                      .withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _isAnimating ? Colors.orange : Colors.blue,
-                  ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _textController,
+                decoration: const InputDecoration(
+                  labelText: 'Tap to show keyboard',
+                  border: OutlineInputBorder(),
+                  hintText: 'Type something...',
                 ),
-                child: Center(
-                  child: Text(
-                    '${_keyboardHeight.toStringAsFixed(0)} px',
-                    style: TextStyle(
-                      color: _isAnimating ? Colors.orange : Colors.blue,
-                      fontWeight: FontWeight.bold,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => SmartKeyboard.showKeyboard(),
+                      icon: const Icon(Icons.keyboard),
+                      label: const Text('Show'),
                     ),
                   ),
-                ),
-              ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _textController,
-              decoration: const InputDecoration(
-                labelText: 'Tap to show keyboard',
-                border: OutlineInputBorder(),
-                hintText: 'Type something...',
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => SmartKeyboard.showKeyboard(),
-                    icon: const Icon(Icons.keyboard),
-                    label: const Text('Show'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => SmartKeyboard.hideKeyboard(),
+                      icon: const Icon(Icons.keyboard_hide),
+                      label: const Text('Hide'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.tonalIcon(
-                    onPressed: () => SmartKeyboard.hideKeyboard(),
-                    icon: const Icon(Icons.keyboard_hide),
-                    label: const Text('Hide'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _showCurrentHeight,
-              icon: const Icon(Icons.height),
-              label: const Text('Get Current Height'),
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _showCurrentHeight,
+                icon: const Icon(Icons.height),
+                label: const Text('Get Current Height'),
+              ),
+            ],
+          ),
         ),
       ),
     );

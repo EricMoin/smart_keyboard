@@ -65,16 +65,19 @@ void main() {
 
         const event1 = KeyboardHeightEvent(
           height: 100.0,
+          targetHeight: 300.0,
           isAnimating: true,
           isVisible: true,
         );
         const event2 = KeyboardHeightEvent(
           height: 200.0,
+          targetHeight: 300.0,
           isAnimating: true,
           isVisible: true,
         );
         const event3 = KeyboardHeightEvent(
           height: 300.0,
+          targetHeight: 300.0,
           isAnimating: false,
           isVisible: true,
         );
@@ -103,6 +106,7 @@ void main() {
         // Emit first event — should go through immediately
         const event1 = KeyboardHeightEvent(
           height: 100.0,
+          targetHeight: 250.0,
           isAnimating: true,
           isVisible: true,
         );
@@ -115,16 +119,19 @@ void main() {
         // Emit multiple events within the throttle window
         const event2 = KeyboardHeightEvent(
           height: 150.0,
+          targetHeight: 250.0,
           isAnimating: true,
           isVisible: true,
         );
         const event3 = KeyboardHeightEvent(
           height: 200.0,
+          targetHeight: 250.0,
           isAnimating: true,
           isVisible: true,
         );
         const event4 = KeyboardHeightEvent(
           height: 250.0,
+          targetHeight: 250.0,
           isAnimating: true,
           isVisible: true,
         );
@@ -168,6 +175,7 @@ void main() {
         // Emit and immediately close
         const event = KeyboardHeightEvent(
           height: 300.0,
+          targetHeight: 300.0,
           isAnimating: false,
           isVisible: true,
         );
@@ -196,6 +204,7 @@ void main() {
         mockPlatform.emitEvent(
           const KeyboardHeightEvent(
             height: 100.0,
+            targetHeight: 300.0,
             isAnimating: true,
             isVisible: true,
           ),
@@ -206,6 +215,7 @@ void main() {
         mockPlatform.emitEvent(
           const KeyboardHeightEvent(
             height: 200.0,
+            targetHeight: 300.0,
             isAnimating: true,
             isVisible: true,
           ),
@@ -216,6 +226,7 @@ void main() {
         mockPlatform.emitEvent(
           const KeyboardHeightEvent(
             height: 0.0,
+            targetHeight: 0.0,
             isAnimating: false,
             isVisible: false,
           ),
@@ -238,6 +249,7 @@ void main() {
           mockPlatform.emitEvent(
             KeyboardHeightEvent(
               height: 100.0 + i * 10,
+              targetHeight: 300.0,
               isAnimating: i < 4,
               isVisible: true,
             ),
